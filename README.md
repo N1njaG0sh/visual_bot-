@@ -42,16 +42,5 @@ VisualBot — это Telegram-чат-бот для анализа изображ
 
 ---
 
-## 🛠 Технологический стек
-
-- Python
-- YOLOv3
-- OpenCV
-- NumPy
-- Telegram Bot API
-- Deep Learning / Computer Vision
-
----
-
 ## 📷 Примеры работы
 <img width="292" height="144" alt="image" src="https://github.com/user-attachments/assets/b3d404f9-1cec-47c6-ab57-07c126c6bdc2" />
