@@ -1,0 +1,71 @@
+import telebot
+import random
+import os
+import requests
+from datetime import datetime
+from imageai.Detection import ObjectDetection
+from PIL import Image, ImageOps  # Installing pillow instead of PIL
+import PIL
+
+# Инициализация детектора объектов
+detector = ObjectDetection()
+model_path = "yolov3.pt"  # Убедитесь, что этот файл существует!
+detector.setModelTypeAsYOLOv3()
+detector.setModelPath(model_path)
+detector.loadModel()
+
+bot = telebot.TeleBot("****************")
+
+
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    bot.reply_to(message, "Привет! Я твой Telegram бот😁. Напиши что-нибудь! 🙌")
+
+@bot.message_handler(content_types=['photo'])
+def picture(message):
+  try:
+      # Получаем информацию о фото (самое высокое качество обычно последнее в списке)
+      file_id = message.photo[-1].file_id
+      file_info = bot.get_file(file_id)
+      downloaded_file = bot.download_file(file_info.file_path)
+
+      # Создаем уникальное имя файла
+      timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+      filename = f"user_images/photo_{message.from_user.id}_{timestamp}.jpg"
+
+      # Сохраняем файл
+      with open(filename, 'wb') as new_file:
+          new_file.write(downloaded_file)
+
+      bot.reply_to(message, f"✅ Фото сохранено, Обрабатываю")
+      output_filename = f"output_images/output_{message.from_user.id}_{timestamp}.jpg"
+
+      # Обрабатываем изображение
+      detections = detector.detectObjectsFromImage(
+          input_image=filename,
+          output_image_path=output_filename,
+          minimum_percentage_probability=30
+        )
+
+
+
+
+      # Отправляем обработанное фото - ОТКРЫВАЕМ В РЕЖИМЕ ЧТЕНИЯ 'rb'
+      with open(output_filename, 'rb') as photo_file:
+          bot.send_photo(message.chat.id, photo_file, caption="✅ Обработка завершена!")
+      information = []
+      t = ''
+      for click in detections:
+        t +=(click['name'] + ' ' + str(click['percentage_probability']) + '\n')
+      bot.reply_to(message, t)
+
+
+
+
+
+
+
+  except Exception as e:
+          bot.reply_to(message, f"❌ Ошибка при обработке: {str(e)}")
+
+bot.polling()
